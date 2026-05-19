@@ -1,0 +1,147 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap");
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#flag-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 32px;
+  transition: background-color 0.35s ease;
+}
+
+#flag-screen.mode-safe {
+  background: #1a5c55; /* deep verdigris */
+}
+
+#flag-screen.mode-hazard {
+  background: #a07c1a; /* deep tuscan-sun */
+}
+
+#flag-screen.mode-danger {
+  background: #a03820; /* deep burnt-peach */
+}
+
+#flag-screen.mode-finish {
+  background-color: #f4ede0;
+  background-image: repeating-conic-gradient(
+    #1a1000 0deg 90deg,
+    #f4ede0 90deg 180deg
+  );
+  background-size: 100px 100px;
+  animation: checker-slide 1.2s linear infinite;
+}
+
+#flag-screen.mode-idle {
+  background: #0c1c23;
+}
+
+@keyframes checker-slide {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 100px 100px;
+  }
+}
+
+#flag-label {
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  opacity: 0.25;
+  user-select: none;
+  pointer-events: none;
+}
+
+#flag-screen.mode-safe #flag-label {
+  color: #fff;
+}
+#flag-screen.mode-hazard #flag-label {
+  color: #fff;
+}
+#flag-screen.mode-danger #flag-label {
+  color: #fff;
+}
+#flag-screen.mode-finish #flag-label {
+  color: #1a1000;
+}
+#flag-screen.mode-idle #flag-label {
+  color: rgba(244, 237, 224, 0.2);
+}
+
+#flag-screen.mode-hazard {
+  animation: hazard-pulse 1.4s ease-in-out infinite;
+}
+@keyframes hazard-pulse {
+  0%,
+  100% {
+    background: #a07c1a;
+  }
+  50% {
+    background: #7a5c10;
+  }
+}
+
+#flag-screen.mode-danger {
+  animation: danger-flash 0.9s ease-in-out infinite;
+}
+@keyframes danger-flash {
+  0%,
+  100% {
+    background: #a03820;
+  }
+  50% {
+    background: #782810;
+  }
+}
+
+.fullscreen-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+.fullscreen-btn:hover {
+  background: rgba(255, 255, 255, 0.26);
+  color: #fff;
+}
+.fullscreen-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#flag-screen.mode-finish .fullscreen-btn {
+  background: rgba(26, 16, 0, 0.18);
+  border-color: rgba(26, 16, 0, 0.28);
+  color: rgba(26, 16, 0, 0.5);
+}
+#flag-screen.mode-finish .fullscreen-btn:hover {
+  background: rgba(26, 16, 0, 0.32);
+  color: rgba(26, 16, 0, 0.85);
+}

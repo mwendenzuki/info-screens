@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Race Countdown — Beachside Racetrack</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        overflow: hidden;
+        background:
+          linear-gradient(
+            160deg,
+            rgba(12, 28, 35, 0.96) 0%,
+            rgba(26, 48, 64, 0.93) 100%
+          ),
+          url("/assets/beachside-3.jpg") center / cover no-repeat fixed;
+        transition: background 0.5s ease;
+        gap: 0;
+        position: relative;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 70% 50% at 50% 50%,
+          var(--glow-color, transparent) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+        transition:
+          --glow-color 0.5s ease,
+          opacity 0.5s ease;
+        opacity: 0;
+      }
+
+      body.mode-safe::before {
+        --glow-color: rgba(34, 197, 94, 0.12);
+        opacity: 1;
+      }
+      body.mode-hazard::before {
+        --glow-color: rgba(245, 158, 11, 0.12);
+        opacity: 1;
+      }
+      body.mode-danger::before {
+        --glow-color: rgba(239, 68, 68, 0.15);
+        opacity: 1;
+      }
+      body.mode-finish::before {
+        --glow-color: rgba(255, 255, 255, 0.08);
+        opacity: 1;
+      }
+
+      #track-name {
+        position: fixed;
+        top: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: var(--font-display);
+        font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+        letter-spacing: 0.2em;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+
+      #timer-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+      }
+
+      #timer {
+        font-family: var(--font-mono);
+        font-size: clamp(5rem, 22vw, 18rem);
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        transition: color 0.4s ease;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #timer.urgent {
+        color: var(--danger);
+        animation: urgent-pulse 0.5s ease-in-out infinite alternate;
+      }
+
+      @keyframes urgent-pulse {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0.7;
+        }
+      }
+
+      #status-label {
+        font-family: var(--font-display);
+        font-size: clamp(1.2rem, 3.5vw, 3rem);
+        letter-spacing: 0.25em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        transition: color 0.4s ease;
+      }
+
+      #flag-pill-wrap {
+        position: fixed;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      #divider {
+        width: clamp(120px, 30vw, 300px);
+        height: 2px;
+        background: var(--border-hi);
+        border-radius: 2px;
+      }
+
+      #timer.idle-text {
+        font-size: clamp(3rem, 10vw, 8rem);
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body class="mode-idle">
+    <div id="track-name">BEACHSIDE RACETRACK</div>
+
+    <div id="timer-wrap">
+      <div id="timer" class="mono">--:--</div>
+      <div id="divider"></div>
+      <div id="status-label">AWAITING START</div>
+    </div>
+
+    <div id="flag-pill-wrap">
+      <div id="flag-pill" class="flag-pill mode-idle">
+        <div class="dot"></div>
+        <span id="flag-label">IDLE</span>
+      </div>
+    </div>
+
+    <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen">
+      <svg viewBox="0 0 24 24">
+        <polyline points="15 3 21 3 21 9" />
+        <polyline points="9 21 3 21 3 15" />
+        <line x1="21" y1="3" x2="14" y2="10" />
+        <line x1="3" y1="21" x2="10" y2="14" />
+      </svg>
+    </button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/shared.js"></script>
+    <script src="/js/display.js"></script>
+    <script>
+      const socket = io();
+      const body = document.body;
+      const timerEl = document.getElementById("timer");
+      const statusLabel = document.getElementById("status-label");
+      const flagPill = document.getElementById("flag-pill");
+      const flagLabel = document.getElementById("flag-label");
+
+      socket.on("state:update", render);
+
+      function render(state) {
+        const mode = state.raceMode || "idle";
+
+        body.className = `mode-${mode}`;
+
+        flagPill.className = `flag-pill mode-${mode}`;
+        flagLabel.textContent = modeLabel(mode);
+
+        if (!state.raceActive) {
+          timerEl.className = "mono idle-text";
+          timerEl.classList.remove("urgent");
+
+          if (mode === "finish" || mode === "danger") {
+            timerEl.textContent = "0:00";
+            statusLabel.textContent =
+              mode === "finish" ? "RACE OVER" : "SESSION ENDED";
+          } else {
+            timerEl.textContent = "--:--";
+            statusLabel.textContent = "AWAITING START";
+          }
+          return;
+        }
+
+        timerEl.className = "mono";
+        const remaining = state.raceRemaining ?? 0;
+        const urgent = remaining <= 60_000;
+
+        timerEl.textContent = formatCountdown(remaining);
+        timerEl.classList.toggle("urgent", urgent);
+
+        if (mode === "finish") {
+          statusLabel.textContent = "RACE OVER — RETURN TO PIT";
+        } else if (mode === "danger") {
+          statusLabel.textContent = "DANGER — STOP";
+        } else if (mode === "hazard") {
+          statusLabel.textContent = "HAZARD — SLOW DOWN";
+        } else {
+          statusLabel.textContent = urgent ? "FINAL LAP" : "RACE IN PROGRESS";
+        }
+      }
+    </script>
+  </body>
+</html>

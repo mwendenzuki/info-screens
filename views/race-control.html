@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Race Control — Beachside Racetrack</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <style>
+      html {
+        overflow-y: auto;
+        height: auto;
+      }
+      body.scrollable {
+        padding: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(
+            to bottom,
+            rgba(12, 28, 35, 0.97) 0%,
+            rgba(12, 28, 35, 0.95) 100%
+          ),
+          url("/assets/racetrack-3.jpg") center / cover no-repeat fixed;
+      }
+
+      #top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 24px;
+        background: rgba(21, 37, 48, 0.96);
+        border-bottom: 1px solid rgba(233, 196, 106, 0.15);
+        backdrop-filter: blur(12px);
+      }
+
+      #top-bar::after {
+        content: "";
+        position: absolute;
+        right: 160px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 60px;
+        height: 42px;
+        background: url("/assets/racetrack-2.svg") center / contain no-repeat;
+        opacity: 0.08;
+        pointer-events: none;
+      }
+
+      #top-bar h1 {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+      }
+
+      #top-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      #main {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .card-header {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card-header h2 {
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
+      }
+
+      .card-body {
+        padding: 20px;
+      }
+
+      #timer-display {
+        text-align: center;
+        padding: 16px;
+      }
+
+      #timer-value {
+        font-family: var(--font-mono);
+        font-size: clamp(3rem, 10vw, 6rem);
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        line-height: 1;
+        transition: color 0.3s;
+      }
+
+      #timer-value.urgent {
+        color: var(--danger);
+      }
+      #timer-value.inactive {
+        color: var(--text-muted);
+      }
+
+      #mode-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      #mode-pill {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        letter-spacing: 0.12em;
+        padding: 6px 16px;
+        border-radius: 999px;
+      }
+
+      #mode-pill.mode-idle {
+        background: var(--surface3);
+        color: var(--text-muted);
+      }
+      #mode-pill.mode-safe {
+        background: var(--safe-bg);
+        color: var(--safe);
+      }
+      #mode-pill.mode-hazard {
+        background: var(--hazard-bg);
+        color: var(--hazard);
+      }
+      #mode-pill.mode-danger {
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+      #mode-pill.mode-finish {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+      }
+
+      #control-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .control-btn {
+        width: 100%;
+        padding: 18px 12px;
+        font-family: var(--font-display);
+        font-size: 1.3rem;
+        letter-spacing: 0.1em;
+        border-radius: var(--radius);
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .control-btn:disabled {
+        opacity: 0.25;
+        cursor: not-allowed;
+      }
+
+      #btn-start {
+        grid-column: 1 / -1;
+        background: var(--accent);
+        color: #111;
+        font-size: 1.6rem;
+      }
+      #btn-start:hover:not(:disabled) {
+        background: #c6ef00;
+      }
+
+      #btn-safe {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--safe);
+        border: 2px solid var(--safe);
+      }
+      #btn-safe:hover:not(:disabled) {
+        background: rgba(34, 197, 94, 0.3);
+      }
+      #btn-safe.active {
+        background: var(--safe);
+        color: #111;
+      }
+
+      #btn-hazard {
+        background: rgba(245, 158, 11, 0.15);
+        color: var(--hazard);
+        border: 2px solid var(--hazard);
+      }
+      #btn-hazard:hover:not(:disabled) {
+        background: rgba(245, 158, 11, 0.3);
+      }
+      #btn-hazard.active {
+        background: var(--hazard);
+        color: #111;
+      }
+
+      #btn-danger {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--danger);
+        border: 2px solid var(--danger);
+      }
+      #btn-danger:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.3);
+      }
+      #btn-danger.active {
+        background: var(--danger);
+        color: #fff;
+      }
+
+      #btn-finish {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border: 2px solid var(--border-hi);
+      }
+      #btn-finish:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+      }
+      #btn-finish.active {
+        background: repeating-conic-gradient(
+          #fff 0deg 90deg,
+          #111 90deg 180deg
+        );
+        background-size: 24px 24px;
+        color: transparent;
+      }
+
+      #btn-end-session {
+        grid-column: 1 / -1;
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border: 1px dashed rgba(239, 68, 68, 0.4);
+        font-size: 1rem;
+      }
+      #btn-end-session:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.2);
+      }
+
+      .driver-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .driver-row:last-child {
+        border-bottom: none;
+      }
+
+      .car-badge {
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        color: var(--accent);
+        min-width: 2ch;
+        text-align: center;
+      }
+
+      .driver-name {
+        font-size: 1rem;
+        color: var(--text);
+      }
+
+      .no-session-msg {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        text-align: center;
+        padding: 16px 0;
+      }
+
+      #feedback {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        padding: 12px 20px;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+        transition: transform 0.3s ease;
+        z-index: 200;
+        white-space: nowrap;
+      }
+
+      #feedback.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      #feedback.error {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #f87171;
+      }
+      #feedback.info {
+        background: rgba(212, 255, 0, 0.1);
+        border: 1px solid rgba(212, 255, 0, 0.3);
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body class="scrollable">
+    <div id="auth-overlay">
+      <div class="auth-box">
+        <div class="auth-title">RACE CONTROL</div>
+        <div class="auth-subtitle">
+          Beachside Racetrack — Safety Official Access
+        </div>
+        <div class="auth-error" id="auth-error"></div>
+        <input
+          type="password"
+          id="auth-key-input"
+          placeholder="Enter access key"
+          autocomplete="off"
+        />
+        <button class="btn btn-primary" id="auth-submit-btn">Unlock</button>
+      </div>
+    </div>
+
+    <div id="top-bar">
+      <h1>RACE CONTROL</h1>
+      <div id="top-bar-right">
+        <div id="mode-strip-inline" class="flag-pill mode-idle">
+          <div class="dot"></div>
+          <span id="mode-label-inline">IDLE</span>
+        </div>
+        <button class="btn btn-ghost" id="logout-btn">Log out</button>
+      </div>
+    </div>
+
+    <div id="main">
+      <div class="card">
+        <div class="card-body" id="timer-display">
+          <div id="timer-value" class="inactive">--:--</div>
+          <div id="mode-display">
+            <div id="mode-pill" class="mode-pill mode-idle">IDLE</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2>RACE CONTROLS</h2></div>
+        <div class="card-body">
+          <div id="control-grid">
+            <button class="control-btn" id="btn-start">START RACE</button>
+            <button class="control-btn" id="btn-safe" disabled>SAFE</button>
+            <button class="control-btn" id="btn-hazard" disabled>HAZARD</button>
+            <button class="control-btn" id="btn-danger" disabled>DANGER</button>
+            <button class="control-btn" id="btn-finish" disabled>FINISH</button>
+            <button class="control-btn" id="btn-end-session" disabled>
+              END SESSION
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="briefing-card">
+        <div class="card-header"><h2>DRIVER BRIEFING</h2></div>
+        <div class="card-body" id="briefing-body">
+          <div class="no-session-msg">No upcoming session.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/shared.js"></script>
+    <script src="/js/display.js"></script>
+    <script src="/js/race-control.js"></script>
+  </body>
+</html>

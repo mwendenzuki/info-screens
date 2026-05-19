@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Next Race — Beachside Racetrack</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+        background:
+          linear-gradient(
+            to bottom,
+            rgba(12, 28, 35, 0.95) 0%,
+            rgba(12, 28, 35, 0.88) 60%,
+            rgba(38, 70, 83, 0.85) 100%
+          ),
+          url("/assets/beachside.svg") center bottom / cover no-repeat;
+      }
+
+      #header {
+        padding: 28px 40px 20px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      #track-name {
+        font-family: var(--font-display);
+        font-size: clamp(1rem, 2vw, 1.5rem);
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+      }
+
+      #screen-title {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 5vw, 4rem);
+        letter-spacing: 0.1em;
+        color: var(--accent);
+      }
+
+      #content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      #driver-list {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 0 40px;
+        overflow: hidden;
+      }
+
+      .driver-entry {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        flex: 1;
+        border-bottom: 1px solid var(--border);
+        min-height: 0;
+        animation: slide-in 0.35s ease both;
+      }
+
+      .driver-entry:last-child {
+        border-bottom: none;
+      }
+
+      @keyframes slide-in {
+        from {
+          opacity: 0;
+          transform: translateX(-16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .car-badge {
+        font-family: var(--font-display);
+        font-size: clamp(2.5rem, 7vw, 6rem);
+        color: var(--accent);
+        letter-spacing: 0.04em;
+        min-width: 2.5ch;
+        text-align: center;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
+      .driver-name {
+        font-size: clamp(1.4rem, 3.5vw, 3rem);
+        font-weight: 500;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.1;
+      }
+
+      #paddock-cta {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 24px 40px;
+        background: var(--accent);
+        flex-shrink: 0;
+        animation: cta-appear 0.5s ease;
+      }
+
+      #paddock-cta.visible {
+        display: flex;
+      }
+
+      @keyframes cta-appear {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      #paddock-cta .cta-icon {
+        font-size: clamp(1.5rem, 3vw, 2.5rem);
+      }
+
+      #paddock-cta .cta-text {
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 3.5vw, 3rem);
+        letter-spacing: 0.1em;
+        color: #111;
+      }
+
+      #empty-state {
+        flex: 1;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+      }
+
+      #empty-state.visible {
+        display: flex;
+      }
+
+      #empty-state .big {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 6vw, 5rem);
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+      }
+
+      #empty-state .sub {
+        font-size: 1rem;
+        color: var(--text-muted);
+        opacity: 0.5;
+      }
+
+      #mode-strip {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        z-index: 50;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mode-strip" class="mode-strip mode-idle"></div>
+
+    <div id="header">
+      <div id="track-name">BEACHSIDE RACETRACK</div>
+      <div id="screen-title">NEXT RACE</div>
+    </div>
+
+    <div id="content">
+      <div id="driver-list"></div>
+      <div id="empty-state">
+        <div class="big">NO UPCOMING RACE</div>
+        <div class="sub">Check back soon</div>
+      </div>
+    </div>
+
+    <div id="paddock-cta">
+      <span class="cta-icon">🏁</span>
+      <span class="cta-text">PLEASE PROCEED TO THE PADDOCK</span>
+    </div>
+
+    <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen">
+      <svg viewBox="0 0 24 24">
+        <polyline points="15 3 21 3 21 9" />
+        <polyline points="9 21 3 21 3 15" />
+        <line x1="21" y1="3" x2="14" y2="10" />
+        <line x1="3" y1="21" x2="10" y2="14" />
+      </svg>
+    </button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/shared.js"></script>
+    <script src="/js/display.js"></script>
+    <script>
+      const socket = io();
+      const modeStrip = document.getElementById("mode-strip");
+      const driverList = document.getElementById("driver-list");
+      const emptyState = document.getElementById("empty-state");
+      const paddockCta = document.getElementById("paddock-cta");
+
+      socket.on("state:update", render);
+
+      function render(state) {
+        modeStrip.className = `mode-strip mode-${state.raceMode}`;
+        const session = state.nextSession;
+
+        if (!session || !session.drivers.length) {
+          driverList.innerHTML = "";
+          emptyState.classList.add("visible");
+          paddockCta.classList.remove("visible");
+          return;
+        }
+
+        emptyState.classList.remove("visible");
+        paddockCta.classList.toggle("visible", Boolean(state.pendingPaddock));
+
+        const drivers = [...session.drivers].sort((a, b) => a.car - b.car);
+        renderDrivers(drivers);
+      }
+
+      function renderDrivers(drivers) {
+        const key = drivers.map((d) => `${d.car}:${d.name}`).join("|");
+        if (driverList.dataset.key === key) return;
+        driverList.dataset.key = key;
+
+        driverList.innerHTML = "";
+        drivers.forEach((driver, i) => {
+          const entry = document.createElement("div");
+          entry.className = "driver-entry";
+          entry.style.animationDelay = `${i * 0.06}s`;
+          entry.innerHTML = `
+          <div class="car-badge">${driver.car}</div>
+          <div class="driver-name">${escHtml(driver.name)}</div>
+        `;
+          driverList.appendChild(entry);
+        });
+      }
+
+      function escHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+    </script>
+  </body>
+</html>

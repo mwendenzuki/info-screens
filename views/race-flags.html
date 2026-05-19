@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Race Flag — Beachside Racetrack</title>
+    <link rel="stylesheet" href="/css/flags.css" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .fullscreen-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.7);
+        width: 44px;
+        height: 44px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        z-index: 100;
+      }
+
+      .fullscreen-btn:hover {
+        background: rgba(255, 255, 255, 0.28);
+        color: #fff;
+      }
+
+      .fullscreen-btn svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      #flag-screen.mode-finish .fullscreen-btn {
+        background: rgba(0, 0, 0, 0.2);
+        border-color: rgba(0, 0, 0, 0.3);
+        color: rgba(0, 0, 0, 0.5);
+      }
+      #flag-screen.mode-finish .fullscreen-btn:hover {
+        background: rgba(0, 0, 0, 0.35);
+        color: rgba(0, 0, 0, 0.8);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="flag-screen" class="mode-idle">
+      <div id="flag-label">IDLE</div>
+    </div>
+
+    <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle fullscreen">
+      <svg viewBox="0 0 24 24">
+        <polyline points="15 3 21 3 21 9" />
+        <polyline points="9 21 3 21 3 15" />
+        <line x1="21" y1="3" x2="14" y2="10" />
+        <line x1="3" y1="21" x2="10" y2="14" />
+      </svg>
+    </button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/display.js"></script>
+    <script>
+      const socket = io();
+      const flagScreen = document.getElementById("flag-screen");
+      const flagLabel = document.getElementById("flag-label");
+
+      const MODE_LABELS = {
+        idle: "IDLE",
+        safe: "SAFE",
+        hazard: "HAZARD",
+        danger: "DANGER",
+        finish: "FINISH",
+      };
+
+      socket.on("state:update", ({ raceMode }) => {
+        const mode = raceMode || "idle";
+        flagScreen.className = `mode-${mode}`;
+        flagLabel.textContent = MODE_LABELS[mode] || mode.toUpperCase();
+      });
+    </script>
+  </body>
+</html>

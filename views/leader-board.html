@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leader Board — Beachside Racetrack</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+        background:
+          linear-gradient(
+            to bottom,
+            rgba(12, 28, 35, 0.97) 0%,
+            rgba(12, 28, 35, 0.92) 100%
+          ),
+          url("/assets/beachside.svg") center bottom / cover no-repeat;
+      }
+
+      #top-bar {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 20px 32px 16px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        gap: 16px;
+      }
+
+      #track-name {
+        font-family: var(--font-display);
+        font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+        letter-spacing: 0.1em;
+        color: var(--accent);
+      }
+
+      #session-label {
+        font-family: var(--font-display);
+        font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
+        text-align: center;
+      }
+
+      #top-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px;
+      }
+
+      #countdown {
+        font-family: var(--font-mono);
+        font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: 0.05em;
+        min-width: 5ch;
+        text-align: right;
+      }
+
+      #countdown.urgent {
+        color: var(--danger);
+      }
+
+      #col-headers {
+        display: grid;
+        grid-template-columns: 60px 70px 1fr 160px 80px;
+        padding: 10px 32px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+
+      #col-headers span {
+        font-family: var(--font-display);
+        font-size: 0.85rem;
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
+      }
+
+      #col-headers .right {
+        text-align: right;
+      }
+
+      #driver-list {
+        flex: 1;
+        overflow: hidden;
+        padding: 0;
+      }
+
+      .driver-row {
+        display: grid;
+        grid-template-columns: 60px 70px 1fr 160px 80px;
+        align-items: center;
+        padding: 0 32px;
+        height: calc((100vh - 160px) / 8);
+        min-height: 52px;
+        max-height: 100px;
+        border-bottom: 1px solid var(--border);
+        transition: background var(--transition);
+      }
+
+      .driver-row:last-child {
+        border-bottom: none;
+      }
+
+      .pos {
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 3vw, 2.4rem);
+        letter-spacing: 0.02em;
+      }
+      .pos-1 {
+        color: var(--gold);
+      }
+      .pos-2 {
+        color: var(--silver);
+      }
+      .pos-3 {
+        color: var(--bronze);
+      }
+      .pos-n {
+        color: var(--text-muted);
+      }
+
+      .car-num {
+        font-family: var(--font-display);
+        font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+        color: var(--accent);
+        letter-spacing: 0.04em;
+      }
+
+      .driver-name {
+        font-size: clamp(1rem, 2.2vw, 1.7rem);
+        font-weight: 500;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-right: 16px;
+      }
+
+      .fastest-lap {
+        font-family: var(--font-mono);
+        font-size: clamp(1rem, 1.8vw, 1.4rem);
+        color: var(--text);
+        text-align: right;
+        letter-spacing: 0.03em;
+      }
+
+      .fastest-lap.no-time {
+        color: var(--text-muted);
+      }
+
+      .fastest-lap .pb-badge {
+        display: inline-block;
+        background: var(--accent-dim);
+        color: var(--accent);
+        font-family: var(--font-display);
+        font-size: 0.65rem;
+        letter-spacing: 0.12em;
+        padding: 1px 5px;
+        border-radius: 3px;
+        vertical-align: middle;
+        margin-left: 6px;
+      }
+
+      .lap-count {
+        font-family: var(--font-mono);
+        font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+        color: var(--text-muted);
+        text-align: right;
+      }
+
+      #empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      #empty-state .big-label {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 5vw, 4rem);
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
+      }
+
+      #empty-state .sub {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        opacity: 0.6;
+      }
+
+      #status-banner {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 8px 20px;
+        background: var(--surface2);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+
+      #status-banner.visible {
+        display: flex;
+      }
+
+      #status-banner span {
+        font-family: var(--font-display);
+        font-size: 1rem;
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+      }
+
+      #mode-strip {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        transition: background 0.4s ease;
+        z-index: 50;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mode-strip" class="mode-strip mode-idle"></div>
+    <div id="status-banner">
+      <span id="banner-text">LAST RACE RESULTS</span>
+    </div>
+
+    <div id="top-bar">
+      <div id="track-name">BEACHSIDE RACETRACK</div>
+      <div id="session-label">—</div>
+      <div id="top-right">
+        <div id="flag-pill" class="flag-pill mode-idle">
+          <div class="dot"></div>
+          <span id="flag-label">IDLE</span>
+        </div>
+        <div id="countdown" class="mono">--:--</div>
+      </div>
+    </div>
+
+    <div id="col-headers">
+      <span>POS</span>
+      <span>CAR</span>
+      <span>DRIVER</span>
+      <span class="right">FASTEST LAP</span>
+      <span class="right">LAP</span>
+    </div>
+
+    <div id="driver-list"></div>
+
+    <div id="empty-state" class="hidden">
+      <div class="big-label">NO RACE DATA</div>
+      <div class="sub">Waiting for the first session to begin</div>
+    </div>
+
+    <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen">
+      <svg viewBox="0 0 24 24">
+        <polyline points="15 3 21 3 21 9" />
+        <polyline points="9 21 3 21 3 15" />
+        <line x1="21" y1="3" x2="14" y2="10" />
+        <line x1="3" y1="21" x2="10" y2="14" />
+      </svg>
+    </button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/shared.js"></script>
+    <script src="/js/display.js"></script>
+    <script src="/js/leader-board.js"></script>
+  </body>
+</html>

@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Front Desk — Beachside Racetrack</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <style>
+      html {
+        overflow-y: auto;
+        height: auto;
+      }
+      body.scrollable {
+        padding: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(
+            to bottom,
+            rgba(12, 28, 35, 0.97) 0%,
+            rgba(12, 28, 35, 0.95) 100%
+          ),
+          url("/assets/beachside-2.jpg") center top / cover no-repeat fixed;
+      }
+
+      #top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 32px;
+        background: rgba(21, 37, 48, 0.96);
+        border-bottom: 1px solid rgba(233, 196, 106, 0.15);
+        backdrop-filter: blur(12px);
+      }
+
+      #top-bar::after {
+        content: "";
+        position: absolute;
+        right: 100px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 60px;
+        height: 42px;
+        background: url("/assets/racetrack-2.svg") center / contain no-repeat;
+        opacity: 0.08;
+        pointer-events: none;
+      }
+
+      #top-bar h1 {
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+      }
+
+      #main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card-header h2 {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        letter-spacing: 0.12em;
+        color: var(--text-dim);
+      }
+
+      .card-body {
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .add-row {
+        display: flex;
+        gap: 10px;
+      }
+
+      .add-row input {
+        flex: 1;
+      }
+
+      .session-block {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .session-block-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: var(--surface2);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .session-block-header .session-name {
+        font-family: var(--font-display);
+        font-size: 1rem;
+        letter-spacing: 0.1em;
+        color: var(--text);
+      }
+
+      .driver-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .driver-table th {
+        padding: 10px 16px;
+        text-align: left;
+        font-family: var(--font-display);
+        font-size: 0.75rem;
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .driver-table th:last-child {
+        text-align: right;
+      }
+
+      .driver-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9rem;
+        color: var(--text);
+        vertical-align: middle;
+      }
+
+      .driver-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .driver-table .car-cell {
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        color: var(--accent);
+      }
+
+      .driver-table .actions-cell {
+        text-align: right;
+      }
+
+      .actions-cell .action-group {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        align-items: center;
+      }
+
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.78rem;
+        border-radius: var(--radius);
+      }
+
+      .driver-table td input,
+      .driver-table td select {
+        padding: 5px 8px;
+        font-size: 0.85rem;
+        width: auto;
+        min-width: 120px;
+      }
+
+      .driver-table td select {
+        background: var(--surface2);
+        border: 1px solid var(--border-hi);
+        border-radius: var(--radius);
+        color: var(--accent);
+        font-family: var(--font-mono);
+      }
+
+      .add-driver-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto auto;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .field-group label {
+        font-size: 0.75rem;
+        font-family: var(--font-display);
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+      }
+
+      .field-group select {
+        background: var(--surface2);
+        border: 1px solid var(--border-hi);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 1rem;
+        padding: 10px 14px;
+        outline: none;
+        transition: border-color var(--transition);
+      }
+
+      .field-group select:focus {
+        border-color: var(--accent);
+      }
+
+      .empty-sessions {
+        padding: 32px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      #error-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #f87171;
+        padding: 12px 20px;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+        transition: transform 0.3s ease;
+        z-index: 200;
+        white-space: nowrap;
+      }
+
+      #error-toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
+  </head>
+  <body class="scrollable">
+    <div id="auth-overlay">
+      <div class="auth-box">
+        <div class="auth-title">FRONT DESK</div>
+        <div class="auth-subtitle">
+          Beachside Racetrack — Receptionist Access
+        </div>
+        <div class="auth-error" id="auth-error"></div>
+        <input
+          type="password"
+          id="auth-key-input"
+          placeholder="Enter access key"
+          autocomplete="off"
+        />
+        <button class="btn btn-primary" id="auth-submit-btn">Unlock</button>
+      </div>
+    </div>
+
+    <div id="top-bar">
+      <h1>FRONT DESK</h1>
+      <button class="btn btn-ghost" id="logout-btn">Log out</button>
+    </div>
+
+    <div id="main">
+      <div class="card">
+        <div class="card-header">
+          <h2>ADD DRIVER TO SESSION</h2>
+        </div>
+        <div class="card-body">
+          <div class="add-driver-form">
+            <div class="field-group">
+              <label>Driver Name</label>
+              <input
+                type="text"
+                id="driver-name-input"
+                placeholder="e.g. Alice Smith"
+              />
+            </div>
+            <div class="field-group">
+              <label>Session</label>
+              <select id="session-select">
+                <option value="">— Select session —</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Car</label>
+              <select id="car-select">
+                <option value="">Auto-assign</option>
+              </select>
+            </div>
+            <button
+              class="btn btn-primary"
+              id="add-driver-btn"
+              style="align-self: end"
+            >
+              Add Driver
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>UPCOMING SESSIONS</h2>
+          <button class="btn btn-primary" id="add-session-btn">
+            + New Session
+          </button>
+        </div>
+        <div class="card-body" id="sessions-container">
+          <div class="empty-sessions">No sessions yet — add one above.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="error-toast"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/display.js"></script>
+    <script src="/js/front-desk.js"></script>
+  </body>
+</html>

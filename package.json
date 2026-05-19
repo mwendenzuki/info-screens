@@ -1,0 +1,27 @@
+{
+  "name": "info-screens",
+  "version": "1.0.0",
+  "description": "Beachside Races info screens",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "RACE_DURATION=60000 nodemon server/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitea.kood.tech/artjomamberg/info-screens.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lap-line Tracker — Beachside Racetrack</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background:
+          linear-gradient(
+            to bottom,
+            rgba(12, 28, 35, 0.97) 0%,
+            rgba(38, 70, 83, 0.93) 100%
+          ),
+          url("/assets/beachside-2.jpg") center / cover no-repeat;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        background: rgba(21, 37, 48, 0.96);
+        border-bottom: 1px solid rgba(233, 196, 106, 0.15);
+        flex-shrink: 0;
+        gap: 10px;
+        min-height: 0;
+      }
+
+      #top-bar h1 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        white-space: nowrap;
+      }
+
+      #top-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+
+      #race-timer {
+        font-family: var(--font-mono);
+        font-size: clamp(1rem, 3vw, 1.4rem);
+        font-weight: 600;
+        color: var(--text);
+        min-width: 4.5ch;
+        text-align: right;
+      }
+
+      #race-timer.urgent {
+        color: var(--danger);
+      }
+      #race-timer.inactive {
+        color: var(--text-muted);
+      }
+
+      #status-banner {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(4px, 1.2vh, 10px) 10px;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: clamp(0.75rem, 2vw, 1rem);
+        letter-spacing: 0.12em;
+        flex-shrink: 0;
+      }
+
+      #status-banner.mode-safe {
+        display: flex;
+        background: var(--safe-bg);
+        color: var(--safe);
+      }
+      #status-banner.mode-hazard {
+        display: flex;
+        background: var(--hazard-bg);
+        color: var(--hazard);
+      }
+      #status-banner.mode-danger {
+        display: flex;
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+      #status-banner.mode-finish {
+        display: flex;
+        background: var(--surface2);
+        color: var(--text);
+      }
+      #status-banner.mode-idle {
+        display: none;
+      }
+
+      #lap-grid {
+        flex: 1;
+        display: grid;
+        gap: 3px;
+        padding: 3px;
+        background: var(--bg);
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .lap-btn {
+        background: var(--surface2);
+        border: 2px solid var(--border-hi);
+        border-radius: var(--radius-lg);
+        color: var(--accent);
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: clamp(1.8rem, min(8vw, 9vh), 5.5rem);
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        transition:
+          background 0.1s ease,
+          transform 0.08s ease,
+          border-color 0.15s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(2px, 0.8vh, 6px);
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .lap-btn .car-label {
+        font-size: 0.38em;
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        color: var(--text-muted);
+        line-height: 1;
+      }
+
+      .lap-btn .lap-count {
+        font-family: var(--font-mono);
+        font-size: 0.28em;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        line-height: 1;
+      }
+
+      .lap-btn:hover:not(:disabled) {
+        background: var(--surface3);
+        border-color: var(--accent);
+      }
+
+      .lap-btn:active:not(:disabled) {
+        transform: scale(0.96);
+        background: var(--accent-dim);
+      }
+
+      .lap-btn.tapped {
+        background: var(--accent-dim);
+        border-color: var(--accent);
+      }
+
+      .lap-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        border-color: transparent;
+      }
+
+      .lap-btn:disabled .car-label {
+        opacity: 0;
+      }
+
+      #waiting-msg {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      #waiting-msg .big {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: clamp(1.5rem, 5vw, 3.5rem);
+        letter-spacing: 0.15em;
+        color: var(--text-muted);
+      }
+
+      #waiting-msg .sub {
+        font-size: clamp(0.75rem, 1.8vw, 0.9rem);
+        color: var(--text-muted);
+        opacity: 0.5;
+      }
+
+      @media (orientation: landscape) and (max-height: 500px) {
+        #top-bar {
+          padding: 6px 14px;
+        }
+        #top-bar h1 {
+          font-size: clamp(0.75rem, 2vh, 1rem);
+        }
+        #race-timer {
+          font-size: clamp(0.85rem, 2.5vh, 1.2rem);
+        }
+        #status-banner {
+          padding: 3px 10px;
+          font-size: clamp(0.65rem, 1.8vh, 0.85rem);
+        }
+        .lap-btn {
+          border-radius: 8px;
+          gap: 1px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="auth-overlay">
+      <div class="auth-box">
+        <div class="auth-title">LAP-LINE TRACKER</div>
+        <div class="auth-subtitle">Beachside Racetrack — Observer Access</div>
+        <div class="auth-error" id="auth-error"></div>
+        <input
+          type="password"
+          id="auth-key-input"
+          placeholder="Enter access key"
+          autocomplete="off"
+        />
+        <button class="btn btn-primary" id="auth-submit-btn">Unlock</button>
+      </div>
+    </div>
+
+    <div id="top-bar">
+      <h1>LAP-LINE TRACKER</h1>
+      <div id="top-bar-right">
+        <div id="flag-pill" class="flag-pill mode-idle">
+          <div class="dot"></div>
+          <span id="flag-label">IDLE</span>
+        </div>
+        <div id="race-timer" class="inactive">--:--</div>
+        <button
+          class="btn btn-ghost"
+          id="logout-btn"
+          style="padding: 6px 12px; font-size: 0.8rem"
+        >
+          Log out
+        </button>
+      </div>
+    </div>
+
+    <div id="status-banner" class="mode-idle">IDLE</div>
+
+    <div id="lap-grid"></div>
+
+    <div id="waiting-msg">
+      <div class="big">AWAITING RACE</div>
+      <div class="sub">Buttons will appear when the race starts</div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/shared.js"></script>
+    <script src="/js/display.js"></script>
+    <script src="/js/lap-line-tracker.js"></script>
+  </body>
+</html>
